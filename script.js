@@ -123,7 +123,7 @@ let isMultiView = false;
 
 // DOM Elements
 const themeToggle = document.getElementById('theme-toggle');
-const navBtns = document.querySelectorAll('.nav-btn'); 
+const navBtns = document.querySelectorAll('.nav-btn');
 const currentCategoryTitle = document.getElementById('current-category-title');
 const fromInput = document.getElementById('from-value');
 const toInput = document.getElementById('to-value');
@@ -154,10 +154,10 @@ function init() {
     populateUnits(currentCategory);
     renderHistory();
     updateCategoryTitle(currentCategory);
-    
+
     // Event Listeners
-    themeToggle.addEventListener('click', toggleTheme);
-    
+    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+
     navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             switchCategory(btn.dataset.category);
@@ -171,15 +171,15 @@ function init() {
     if (mobileMenuBtn) {
         mobileMenuBtn.addEventListener('click', toggleSidebar);
     }
-    
+
     overlay.addEventListener('click', closeSidebar);
 
-    fromInput.addEventListener('input', handleConversion);
-    fromUnitSelect.addEventListener('change', handleConversion);
-    toUnitSelect.addEventListener('change', handleConversion);
-    
-    swapBtn.addEventListener('click', swapUnits);
-    clearHistoryBtn.addEventListener('click', clearHistory);
+    if (fromInput) fromInput.addEventListener('input', handleConversion);
+    if (fromUnitSelect) fromUnitSelect.addEventListener('change', handleConversion);
+    if (toUnitSelect) toUnitSelect.addEventListener('change', handleConversion);
+
+    if (swapBtn) swapBtn.addEventListener('click', swapUnits);
+    if (clearHistoryBtn) clearHistoryBtn.addEventListener('click', clearHistory);
 
     // View Toggle Listeners
     toggleBtns.forEach(btn => {
@@ -194,11 +194,13 @@ function init() {
 }
 
 function toggleSidebar() {
+    if (!sidebar) return;
     sidebar.classList.toggle('open');
     overlay.classList.toggle('active');
 }
 
 function closeSidebar() {
+    if (!sidebar) return;
     sidebar.classList.remove('open');
     overlay.classList.remove('active');
 }
@@ -219,14 +221,15 @@ function toggleTheme() {
 }
 
 function updateThemeIcon(theme) {
+    if (!themeToggle) return;
     const icon = themeToggle.querySelector('i');
     const text = themeToggle.querySelector('span');
-    
+
     if (theme === 'dark') {
-        icon.className = 'fa-solid fa-sun';
+        if (icon) icon.className = 'fa-solid fa-sun';
         if (text) text.textContent = 'Light Mode';
     } else {
-        icon.className = 'fa-solid fa-moon';
+        if (icon) icon.className = 'fa-solid fa-moon';
         if (text) text.textContent = 'Dark Mode';
     }
 }
@@ -235,14 +238,14 @@ function updateThemeIcon(theme) {
 function switchCategory(category) {
     currentCategory = category;
     updateCategoryTitle(category);
-    
+
     // Update input constraints
     if (category === 'temperature') {
         fromInput.removeAttribute('min');
     } else {
         fromInput.setAttribute('min', '0');
     }
-    
+
     // Update tabs
     navBtns.forEach(btn => {
         if (btn.dataset.category === category) {
@@ -260,7 +263,7 @@ function updateCategoryTitle(category) {
     if (currentCategoryTitle) {
         currentCategoryTitle.textContent = category.charAt(0).toUpperCase() + category.slice(1) + ' Converter';
     }
-    
+
     // Show/Hide rate info
     if (category === 'currency' && rateInfo) {
         rateInfo.classList.remove('hidden');
@@ -272,23 +275,23 @@ function updateCategoryTitle(category) {
 function populateUnits(category) {
     const unitData = units[category];
     const keys = category === 'temperature' ? unitData.types : Object.keys(unitData.rates);
-    
-    // Save current selections if possible, otherwise default
-    // const currentFrom = fromUnitSelect.value;
-    // const currentTo = toUnitSelect.value;
 
-    fromUnitSelect.innerHTML = '';
-    toUnitSelect.innerHTML = '';
+    // Save current selections if possible, otherwise default
+    const currentFrom = fromUnitSelect ? fromUnitSelect.value : null;
+    const currentTo = toUnitSelect ? toUnitSelect.value : null;
+
+    if (fromUnitSelect) fromUnitSelect.innerHTML = '';
+    if (toUnitSelect) toUnitSelect.innerHTML = '';
 
     keys.forEach(key => {
         const label = unitData.labels[key];
-        fromUnitSelect.add(new Option(label, key));
-        toUnitSelect.add(new Option(label, key));
+        if (fromUnitSelect) fromUnitSelect.add(new Option(label, key));
+        if (toUnitSelect) toUnitSelect.add(new Option(label, key));
     });
 
     // Set defaults (first and second item usually)
-    fromUnitSelect.selectedIndex = 0;
-    toUnitSelect.selectedIndex = 1;
+    if (fromUnitSelect) fromUnitSelect.selectedIndex = 0;
+    if (toUnitSelect) toUnitSelect.selectedIndex = 1;
 
     // If in multi-view, re-render results
     if (isMultiView) {
@@ -302,8 +305,8 @@ function handleConversion() {
     let val = parseFloat(fromInput.value);
     if (isNaN(val)) {
         if (isMultiView) {
-            renderMultiResults(null); 
-        } else {
+            renderMultiResults(null);
+        } else if (toInput) {
             toInput.value = '';
         }
         return;
@@ -335,7 +338,7 @@ function handleConversion() {
 
     // Format result to avoid long decimals but keep precision
     const formattedResult = parseFloat(result.toFixed(6));
-    toInput.value = formattedResult;
+    if (toInput) toInput.value = formattedResult;
 
     // Debounce history save
     addToHistory(val, fromUnit, formattedResult, toUnit);
@@ -362,12 +365,12 @@ function convertTemperature(value, from, to) {
     // Convert to Celsius first
     let celsius;
     if (from === 'c') celsius = value;
-    else if (from === 'f') celsius = (value - 32) * 5/9;
+    else if (from === 'f') celsius = (value - 32) * 5 / 9;
     else if (from === 'k') celsius = value - 273.15;
 
     // Convert from Celsius to target
     if (to === 'c') return celsius;
-    if (to === 'f') return (celsius * 9/5) + 32;
+    if (to === 'f') return (celsius * 9 / 5) + 32;
     if (to === 'k') return celsius + 273.15;
 }
 
@@ -380,7 +383,7 @@ function swapUnits() {
 
 function switchView(view) {
     isMultiView = view === 'multi';
-    
+
     // Update buttons
     toggleBtns.forEach(btn => {
         if (btn.dataset.view === view) {
@@ -404,7 +407,7 @@ function switchView(view) {
 
 function renderMultiResults(val, fromUnit) {
     multiResultsGrid.innerHTML = '';
-    
+
     if (val === null) return;
 
     const unitData = units[currentCategory];
@@ -430,7 +433,7 @@ function renderMultiResults(val, fromUnit) {
             <span class="unit-label">${label}</span>
             <span class="result-value">${formattedResult}</span>
         `;
-        
+
         multiResultsGrid.appendChild(card);
     });
 }
@@ -442,10 +445,14 @@ function addToHistory(valIn, unitIn, valOut, unitOut) {
     historyTimeout = setTimeout(() => {
         const item = {
             valIn,
-            unitIn: units[currentCategory].labels[unitIn],
+            // store readable unit labels (keep compatibility with existing saved items)
+            unitIn: units[currentCategory].labels[unitIn] || unitIn,
             valOut,
-            unitOut: units[currentCategory].labels[unitOut],
-            date: new Date().toLocaleString()
+            unitOut: units[currentCategory].labels[unitOut] || unitOut,
+            date: new Date().toLocaleString(),
+            // Save category metadata so history item shows which category it came from
+            category: currentCategory,
+            categoryLabel: currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)
         };
 
         // Add to beginning, limit to 20 items
@@ -458,8 +465,9 @@ function addToHistory(valIn, unitIn, valOut, unitOut) {
 }
 
 function renderHistory() {
+    if (!historyList) return;
     historyList.innerHTML = '';
-    
+
     if (history.length === 0) {
         historyList.innerHTML = '<li class="empty-state">No conversion history yet</li>';
         return;
@@ -468,10 +476,16 @@ function renderHistory() {
     history.forEach(item => {
         const li = document.createElement('li');
         li.className = 'history-item';
+
+        // Backwards compatibility: compute a label if older items don't have category/categoryLabel
+        const categoryLabel = item.categoryLabel || (item.category ? (item.category.charAt(0).toUpperCase() + item.category.slice(1)) : '');
+
+        // Keep layout same as before, add a small category label on the top-right
         li.innerHTML = `
-            <div class="history-details">
+            <div class="history-details" style="position:relative; padding-right:6rem;">
                 <span class="history-conversion">${item.valIn} ${item.unitIn} = ${item.valOut} ${item.unitOut}</span>
                 <span class="history-date">${item.date}</span>
+                <span class="history-category" style="position:absolute; right:8px; top:8px; font-size:0.85rem; opacity:0.85;">${categoryLabel}</span>
             </div>
         `;
         historyList.appendChild(li);
@@ -484,8 +498,6 @@ function clearHistory() {
     renderHistory();
 }
 
-
-
 // Currency API Logic
 async function fetchCurrencyRates() {
     const CACHE_KEY = 'currencyRates';
@@ -494,12 +506,16 @@ async function fetchCurrencyRates() {
     // Check cache
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
-        const { rates, timestamp } = JSON.parse(cached);
-        const age = Date.now() - timestamp;
-        
-        if (age < CACHE_DURATION) {
-            updateCurrencyRates(rates, timestamp);
-            return;
+        try {
+            const { rates, timestamp } = JSON.parse(cached);
+            const age = Date.now() - timestamp;
+
+            if (age < CACHE_DURATION) {
+                updateCurrencyRates(rates, timestamp);
+                return;
+            }
+        } catch (e) {
+            // ignore parse errors and fetch fresh
         }
     }
 
@@ -507,10 +523,10 @@ async function fetchCurrencyRates() {
     try {
         const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
         if (!response.ok) throw new Error('Network response was not ok');
-        
+
         const data = await response.json();
         const timestamp = Date.now();
-        
+
         // Save to cache
         localStorage.setItem(CACHE_KEY, JSON.stringify({
             rates: data.rates,
@@ -518,7 +534,7 @@ async function fetchCurrencyRates() {
         }));
 
         updateCurrencyRates(data.rates, timestamp);
-        
+
     } catch (error) {
         console.error('Failed to fetch currency rates:', error);
         // Fallback to hardcoded rates (already in units object)
@@ -532,10 +548,10 @@ async function fetchCurrencyRates() {
 function updateCurrencyRates(apiRates, timestamp) {
     // Map API keys to our internal keys (lowercase)
     // The API returns uppercase keys (USD, EUR), we use lowercase (usd, eur)
-    
+
     const newRates = {};
     const availableKeys = Object.keys(units.currency.rates); // Keep only supported currencies
-    
+
     availableKeys.forEach(key => {
         const upperKey = key.toUpperCase();
         if (apiRates[upperKey]) {
@@ -552,9 +568,9 @@ function updateCurrencyRates(apiRates, timestamp) {
     // Update UI timestamp
     if (rateInfo) {
         const date = new Date(timestamp);
-        rateInfo.textContent = `Rates updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        rateInfo.textContent = `Rates updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
-    
+
     // Refresh if currently on currency tab
     if (currentCategory === 'currency') {
         handleConversion();
